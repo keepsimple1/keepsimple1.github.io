@@ -1,0 +1,64 @@
+<html>
+
+<head>SwiftUI clipped</head>
+
+<body>
+    <h1>SwiftUI: how ".clipped" saved my navigation</h1>
+    <p>2023-08-17</p>
+    <h2>
+        Problem
+    </h2>
+    <p>
+        In one of my SwiftUI apps, I have a <code>NavigationLink</code> with its destination view like this:
+    <p></p>
+    <pre>
+            GeometryReader { geo in
+                HStack(spacing: itemSpacing) {
+                    ...
+                } 
+                .offset(scrollOffset)
+            }   
+        </pre>
+
+    The HStack supports scrolling because it has 3 items and only 1 item is on screen for any given time.
+
+    <p></p>
+    A problem happens when the user clicks the "Back" button to pop this destination view and navigate back
+    to the parent view: The 1st item in the HStack would show up on screen for a short time before disappearing.
+    It is a very annoying visual bug.
+
+    <h2>Root cause</h2>
+
+    After careful observations, I noticed that what happens is:
+    <p></p>
+    when the user clicks the Navigation Back button, SwiftUI pops up the child view by sliding it
+    off the screen using its default animation. But because the "HStack" is wider than the screen, the current
+    item (i.e. 2nd item) would slide off the screen first, and then the 1st item (was invisible) would slide
+    into the screen before out of the screen. That's why the 1st item suddenly shows up for a short time.
+
+    <h2>The fix</h2>
+    After identifying the root cause, I realized that the best / simplest fix is to make sure "HStack" would
+    always limit its content to the current item (i.e. things on screen). I tried to use `.frame()` modifier
+    first but the result is random at best. Then I encountered the `.clipped()` modifier and it turns out That
+    is exactly what I wanted. After the fix, it looks like this:
+
+    <pre>
+        GeometryReader { geo in
+            HStack(spacing: itemSpacing) {
+                ...
+            } 
+            .offset(scrollOffset)
+            .clipped()
+        }   
+    </pre>
+
+    <p>
+        Problem solved !!!
+    </p>
+    <pre>
+        iOS version: 15.0
+        XCode version:  14.2
+    </pre>
+</body>
+
+</html>
